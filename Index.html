@@ -1,0 +1,198 @@
+
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width,initial-scale=1">
+<meta name="theme-color" content="#f4f6ee">
+<title>윤아의 경험 수집함</title>
+<style>
+:root{--green:#607e59;--bg:#f7f7f1;--line:#e8e8df;--text:#34392f;--muted:#85877e}
+*{box-sizing:border-box}
+body{margin:0;background:var(--bg);color:var(--text);font-family:-apple-system,BlinkMacSystemFont,"Apple SD Gothic Neo",sans-serif}
+main{max-width:760px;margin:auto;padding:20px 15px 45px}
+header{padding:23px 19px;border-radius:24px;background:linear-gradient(130deg,#e6efdf,#fff0dc);margin-bottom:17px}
+h1{font-size:27px;margin:0 0 8px;letter-spacing:-1px}
+.sub{font-size:13px;color:#697365;line-height:1.6}
+.stats{display:flex;gap:10px;margin-top:18px}
+.stat{flex:1;background:#ffffffbd;padding:12px;border-radius:14px}
+.stat small{display:block;color:var(--muted);font-size:12px}
+.stat strong{display:block;font-size:22px;margin-top:5px}
+.filters{background:white;border:1px solid var(--line);padding:12px;border-radius:18px;margin-bottom:15px}
+.tabs{display:flex;gap:7px;flex-wrap:wrap;margin-bottom:12px}
+button{font:inherit;cursor:pointer}
+.tab{border:1px solid var(--line);background:white;border-radius:20px;padding:9px 13px;font-size:13px}
+.tab.active{background:var(--green);color:white;border-color:var(--green)}
+input[type=search]{width:100%;padding:12px;border:1px solid var(--line);border-radius:12px;font-size:15px;background:#fff}
+.summary{font-size:12px;color:var(--muted);margin:12px 2px}
+.group{background:white;border:1px solid var(--line);border-radius:18px;margin-bottom:14px;overflow:hidden}
+.grouphead{padding:15px;background:#edf3e8;display:flex;justify-content:space-between;align-items:center;gap:8px}
+.group[data-f="자주"] .grouphead{background:#fff4dc}
+.group[data-f="가끔"] .grouphead{background:#fff0ee}
+.grouphead strong{font-size:16px}
+.grouphead small{font-size:12px;color:#6e7568}
+.item{padding:12px;display:flex;gap:9px;align-items:center;border-top:1px solid #f0f0e9}
+.info{flex:1;min-width:0;line-height:1.5;font-size:14px}
+.tag{display:block;color:var(--green);font-size:11px;margin-bottom:3px}
+.controls{display:flex;align-items:center;gap:8px}
+.step{border:1px solid var(--line);background:#f8f8f4;border-radius:10px;width:33px;height:35px;font-size:20px;color:var(--text)}
+.count{min-width:18px;text-align:center;font-weight:700;font-size:14px}
+.empty{padding:22px;text-align:center;color:var(--muted);font-size:13px}
+footer{text-align:center;font-size:12px;color:var(--muted);padding:16px;line-height:1.7}
+#toast{position:fixed;bottom:20px;left:50%;transform:translateX(-50%);background:#344535;color:white;padding:11px 17px;border-radius:12px;font-size:13px;opacity:0;pointer-events:none;transition:opacity .2s}
+#toast.show{opacity:1}
+</style>
+</head>
+<body>
+<main>
+<header>
+  <h1>🌱 윤아의 경험 수집함</h1>
+  <div class="sub">오늘도 조금씩 넓어지는 윤아의 세상<br>모든 경험을 채울 필요는 없어. 우리만의 속도로!</div>
+  <div class="stats">
+    <div class="stat"><small>총 경험 횟수</small><strong id="total">0회</strong></div>
+    <div class="stat"><small>경험한 항목</small><strong id="unique">0개</strong></div>
+  </div>
+</header>
+
+<section class="filters">
+  <div class="tabs" id="freqTabs">
+    <button class="tab active" data-v="전체">전체</button>
+    <button class="tab" data-v="매일">☀️ 매일</button>
+    <button class="tab" data-v="자주">🌿 자주</button>
+    <button class="tab" data-v="가끔">⭐ 가끔</button>
+  </div>
+  <div class="tabs" id="domainTabs">
+    <button class="tab active" data-v="전체">모든 분야</button>
+    <button class="tab" data-v="자연체험">자연체험</button>
+    <button class="tab" data-v="동물·생명">동물·생명</button>
+    <button class="tab" data-v="감각놀이">감각놀이</button>
+    <button class="tab" data-v="신체활동">신체활동</button>
+    <button class="tab" data-v="이동·탐방">이동·탐방</button>
+    <button class="tab" data-v="생활경험">생활경험</button>
+    <button class="tab" data-v="사람·관계">사람·관계</button>
+    <button class="tab" data-v="문화·예술">문화·예술</button>
+  </div>
+  <input type="search" id="search" placeholder="🔎 경험 검색하기">
+</section>
+
+<div class="summary" id="summary"></div>
+<div id="list"></div>
+<footer>💚 반복하는 경험도 소중해요.<br>기록은 이 아이폰의 브라우저에 자동 저장돼요.</footer>
+</main>
+<div id="toast">저장했어요</div>
+
+<script>
+const activities=[
+["매일","생활경험","그림책 함께 읽기"],
+["매일","사람·관계","엄마와 편안하게 놀기"],
+["매일","사람·관계","아빠와 함께 놀기"],
+["매일","신체활동","몸을 움직이며 자유롭게 놀기"],
+["매일","감각놀이","블록 쌓고 무너뜨리기"],
+["매일","문화·예술","노래 듣고 춤추기"],
+["매일","생활경험","혼자 먹기·숟가락 사용하기"],
+["매일","생활경험","장난감 정리해 보기"],
+["매일","자연체험","창밖 날씨 살펴보기"],
+["매일","사람·관계","하루 있었던 일 이야기 나누기"],
+["매일","감각놀이","크레용으로 자유롭게 그리기"],
+["매일","생활경험","인형·소꿉놀이 하기"],
+
+["자주","자연체험","동네 산책하며 나뭇잎 찾기"],
+["자주","자연체험","공원에서 풀·꽃 관찰하기"],
+["자주","감각놀이","모래 만지고 담고 쏟기"],
+["자주","감각놀이","물놀이·물 옮기기"],
+["자주","신체활동","미끄럼틀·그네 타기"],
+["자주","신체활동","공 던지기·차기"],
+["자주","생활경험","마트에서 먹을 것 골라 보기"],
+["자주","생활경험","간단한 요리 함께 하기"],
+["자주","사람·관계","또래와 자유롭게 놀기"],
+["자주","자연체험","비·바람·구름 관찰하기"],
+["자주","이동·탐방","동네의 새로운 놀이터 가기"],
+["자주","문화·예술","도서관에서 책 고르기"],
+["자주","생활경험","빵집에서 먹고 싶은 것 주문하기"],
+["자주","감각놀이","점토·밀가루 반죽 만지기"],
+["자주","동물·생명","산책 중 새·곤충 관찰하기"],
+["자주","신체활동","언덕·계단 오르내리기"],
+
+["가끔","자연체험","수목원에서 낙엽 밟기"],
+["가끔","자연체험","숲길에서 나무·열매 관찰하기"],
+["가끔","동물·생명","동물농장·목장에서 동물 만나기"],
+["가끔","동물·생명","오리·새 가까이서 관찰하기"],
+["가끔","자연체험","농장 수확 체험하기"],
+["가끔","이동·탐방","기차 구경하기"],
+["가끔","이동·탐방","기차 타기"],
+["가끔","이동·탐방","버스 타고 새로운 곳 가기"],
+["가끔","이동·탐방","어린이 체험관 방문하기"],
+["가끔","이동·탐방","새로운 동네 탐방하기"],
+["가끔","문화·예술","어린이 공연 관람하기"],
+["가끔","문화·예술","미술 전시 관람하기"],
+["가끔","생활경험","전통시장 구경하기"],
+["가끔","자연체험","계절 축제·꽃 구경하기"],
+["가끔","자연체험","개울·연못에서 물 관찰하기"],
+["가끔","생활경험","식당에서 메뉴 고르고 주문해 보기"],
+["가끔","사람·관계","친척·가족과 특별한 시간 보내기"],
+["가끔","이동·탐방","근교 자연 명소 다녀오기"],
+["가끔","감각놀이","새로운 촉감 재료 탐색하기"],
+["가끔","이동·탐방","가족과 1박 여행하기"]
+].map((a,i)=>({id:i,freq:a[0],domain:a[1],name:a[2],count:0}));
+
+const KEY="yoona-experience-counts-v1";
+try{
+ const saved=JSON.parse(localStorage.getItem(KEY)||"{}");
+ activities.forEach(a=>{if(Number.isInteger(saved[a.id])&&saved[a.id]>=0)a.count=saved[a.id]});
+}catch(e){}
+let frequency="전체",field="전체",query="";
+const $=id=>document.getElementById(id);
+
+function save(){
+ try{localStorage.setItem(KEY,JSON.stringify(Object.fromEntries(activities.map(a=>[a.id,a.count]))));}
+ catch(e){alert("저장 공간을 사용할 수 없어요. 브라우저 설정을 확인해 주세요.");}
+}
+function render(){
+ $("total").textContent=activities.reduce((s,a)=>s+a.count,0)+"회";
+ $("unique").textContent=activities.filter(a=>a.count>0).length+"개";
+ const filtered=activities.filter(a=>(frequency==="전체"||a.freq===frequency)&&(field==="전체"||a.domain===field)&&a.name.includes(query));
+ $("summary").textContent="표시 "+filtered.length+"개 · 횟수는 자동 저장돼요";
+ $("list").innerHTML="";
+ const groups=frequency==="전체"?["매일","자주","가끔"]:[frequency];
+ groups.forEach(f=>{
+  const items=filtered.filter(a=>a.freq===f);if(!items.length)return;
+  const section=document.createElement("section");section.className="group";section.dataset.f=f;
+  const head=document.createElement("div");head.className="grouphead";
+  const title=document.createElement("strong");title.textContent=({"매일":"☀️ 매일 해도 좋은 경험","자주":"🌿 자주 해보면 좋은 경험","가끔":"⭐ 가끔 계획해서 해보는 경험"})[f];
+  const amount=document.createElement("small");amount.textContent=items.filter(a=>a.count>0).length+"/"+items.length+"개 기록";
+  head.append(title,amount);section.append(head);
+  items.forEach(a=>{
+   const row=document.createElement("div");row.className="item";
+   const info=document.createElement("div");info.className="info";
+   const tag=document.createElement("span");tag.className="tag";tag.textContent="["+a.domain+"]";
+   const name=document.createElement("span");name.textContent=a.name;info.append(tag,name);
+   const controls=document.createElement("div");controls.className="controls";
+   const minus=document.createElement("button");minus.className="step";minus.textContent="−";minus.setAttribute("aria-label",a.name+" 횟수 줄이기");
+   const count=document.createElement("span");count.className="count";count.textContent=a.count;
+   const plus=document.createElement("button");plus.className="step";plus.textContent="+";plus.setAttribute("aria-label",a.name+" 횟수 늘리기");
+   minus.disabled=a.count===0;
+   minus.onclick=()=>change(a,-1);plus.onclick=()=>change(a,1);
+   controls.append(minus,count,plus);row.append(info,controls);section.append(row);
+  });
+  $("list").append(section);
+ });
+ if(!filtered.length)$("list").innerHTML='<div class="empty">검색 결과가 없어요.</div>';
+}
+function change(a,n){
+ a.count=Math.max(0,a.count+n);save();render();
+ $("toast").textContent="저장했어요 ✓";$("toast").classList.add("show");
+ setTimeout(()=>$("toast").classList.remove("show"),900);
+}
+function setupTabs(id,callback){
+ $(id).querySelectorAll("button").forEach(b=>b.onclick=()=>{
+  $(id).querySelectorAll("button").forEach(x=>x.classList.remove("active"));
+  b.classList.add("active");callback(b.dataset.v);render();
+ });
+}
+setupTabs("freqTabs",v=>frequency=v);
+setupTabs("domainTabs",v=>field=v);
+$("search").addEventListener("input",e=>{query=e.target.value.trim();render()});
+render();
+</script>
+</body>
+</html>
